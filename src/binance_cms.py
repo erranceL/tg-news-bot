@@ -14,6 +14,7 @@ from src.config import (
     BINANCE_ANNOUNCEMENT_DETAIL_BASE,
     BINANCE_LISTING_CATALOG_ID,
     BINANCE_DELISTING_CATALOG_ID,
+    BINANCE_LAUNCHPAD_CATALOG_ID,
     BINANCE_POLL_INTERVAL_SECONDS,
 )
 from src.dedup import deduplicator
@@ -132,25 +133,29 @@ class BinanceCMSMonitor:
         try:
             while self._running:
                 try:
-                    listing_articles = await self._fetch_catalog(BINANCE_LISTING_CATALOG_ID)
-                    delisting_articles = await self._fetch_catalog(BINANCE_DELISTING_CATALOG_ID)
+                    catalogs = [
+                        (BINANCE_LISTING_CATALOG_ID, "New Cryptocurrency Listing"),
+                        (BINANCE_DELISTING_CATALOG_ID, "Delisting"),
+                        (BINANCE_LAUNCHPAD_CATALOG_ID, "Launchpad/Launchpool"),
+                    ]
+
+                    all_fetched = {}
+                    for catalog_id, catalog_name in catalogs:
+                        articles = await self._fetch_catalog(catalog_id)
+                        all_fetched[catalog_name] = articles
 
                     if self._first_run:
-                        for article in listing_articles:
-                            article_id = str(article.get("id", ""))
-                            if article_id:
-                                self._seen_ids[f"binance_New Cryptocurrency Listing_{article_id}"] = int(time.time())
-                        for article in delisting_articles:
-                            article_id = str(article.get("id", ""))
-                            if article_id:
-                                self._seen_ids[f"binance_Delisting_{article_id}"] = int(time.time())
+                        for catalog_name, articles in all_fetched.items():
+                            for article in articles:
+                                article_id = str(article.get("id", ""))
+                                if article_id:
+                                    self._seen_ids[f"binance_{catalog_name}_{article_id}"] = int(time.time())
                         self._first_run = False
                         logger.info(f"币安初始化完成，已记录 {len(self._seen_ids)} 条历史公告基线，不推送历史消息")
                     else:
-                        if listing_articles:
-                            await self._process_articles(listing_articles, "New Cryptocurrency Listing")
-                        if delisting_articles:
-                            await self._process_articles(delisting_articles, "Delisting")
+                        for catalog_name, articles in all_fetched.items():
+                            if articles:
+                                await self._process_articles(articles, catalog_name)
 
                 except Exception as e:
                     logger.error(f"币安公告轮询异常: {e}", exc_info=True)

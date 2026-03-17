@@ -21,6 +21,7 @@ BINANCE_ANNOUNCEMENT_API = "https://www.binance.com/bapi/composite/v1/public/cms
 BINANCE_ANNOUNCEMENT_DETAIL_BASE = "https://www.binance.com/en/support/announcement/detail"
 BINANCE_LISTING_CATALOG_ID = 48
 BINANCE_DELISTING_CATALOG_ID = 161
+BINANCE_LAUNCHPAD_CATALOG_ID = 128
 BINANCE_POLL_INTERVAL_SECONDS = int(os.environ.get("BINANCE_POLL_INTERVAL", "30"))
 
 # ==================== 币安行情 WebSocket 配置 ====================

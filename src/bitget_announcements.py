@@ -19,10 +19,10 @@ logger = logging.getLogger("bitget_announcements")
 
 BITGET_ANNOUNCEMENT_API = "https://api.bitget.com/api/v2/public/annoucements"
 
-# Bitget V2 API annType 枚举值（只拉取上币和下架相关）
+# Bitget V2 API annType 有效枚举值
 BITGET_ANN_TYPES = [
     "coin_listings",
-    "delisting",
+    "product_updates",
 ]
 
 RECENT_WINDOW_DAYS = 7

@@ -1,23 +1,19 @@
 """
 配置文件 - Telegram 新闻转发 Bot
-所有敏感配置均从环境变量读取，不允许硬编码默认值
+支持环境变量优先；未设置时使用内置默认值（便于无配置启动）
 """
 
 import os
-import sys
 
 # ==================== Telegram Bot 配置 ====================
-TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
-if not TELEGRAM_BOT_TOKEN:
-    print("错误：环境变量 TELEGRAM_BOT_TOKEN 未设置，Bot 无法启动。", file=sys.stderr)
-    sys.exit(1)
+TELEGRAM_BOT_TOKEN = os.environ.get(
+    "TELEGRAM_BOT_TOKEN",
+    "8665632132:AAF0OXX0XCXxcpu-43zOhv__Qx2_Als6_zg",
+)
 
 # 目标频道/群组 Chat ID
 # 环境变量格式: 逗号分隔，例如 "2130253506,-1003500969046"
-_chat_ids_str = os.environ.get("TELEGRAM_CHAT_IDS", "")
-if not _chat_ids_str:
-    print("错误：环境变量 TELEGRAM_CHAT_IDS 未设置，Bot 无法启动。", file=sys.stderr)
-    sys.exit(1)
+_chat_ids_str = os.environ.get("TELEGRAM_CHAT_IDS", "2130253506,-1003500969046")
 TELEGRAM_CHAT_IDS = [int(x.strip()) for x in _chat_ids_str.split(",") if x.strip()]
 
 # ==================== 币安公告公开HTTP轮询配置 ====================

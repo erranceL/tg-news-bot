@@ -53,6 +53,9 @@ POLYMARKET_POLL_INTERVAL_SECONDS = int(os.environ.get("POLYMARKET_POLL_INTERVAL"
 # ==================== 方程式新闻 WebSocket 配置 ====================
 BWE_WS_URL = "wss://bwenews-api.bwe-ws.com/ws"
 
+# ==================== 心跳配置 ====================
+HEARTBEAT_INTERVAL_MINUTES = int(os.environ.get("HEARTBEAT_INTERVAL_MINUTES", "30"))
+
 # ==================== 去重配置 ====================
 DEDUP_CACHE_MAX_SIZE = 10000
 DEDUP_CACHE_TTL_HOURS = 24

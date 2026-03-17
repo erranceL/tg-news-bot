@@ -19,7 +19,7 @@ try:
 except ImportError:
     pass
 
-from src.config import LOG_LEVEL, LOG_FORMAT
+from src.config import LOG_LEVEL, LOG_FORMAT, HEARTBEAT_INTERVAL_MINUTES
 from src.telegram_bot import telegram_bot
 from src.binance_cms import binance_cms_monitor
 from src.okx_announcements import okx_monitor
@@ -66,6 +66,30 @@ async def startup_notification():
         "发送 /help 查看可用命令。"
     )
     await telegram_bot.send_news(startup_msg, source="system")
+
+
+async def heartbeat_loop(stop_event: asyncio.Event):
+    """定时发送心跳状态消息，确认 Bot 仍在运行"""
+    from src.dedup import deduplicator
+    interval = HEARTBEAT_INTERVAL_MINUTES * 60
+    while not stop_event.is_set():
+        try:
+            await asyncio.sleep(interval)
+        except asyncio.CancelledError:
+            return
+        if stop_event.is_set():
+            break
+        try:
+            msg = (
+                "💓 <b>系统心跳</b>\n\n"
+                f"Bot 运行正常，所有模块持续监听中。\n"
+                f"去重缓存条目：{deduplicator.get_cache_size()}\n"
+                f"下次心跳：{HEARTBEAT_INTERVAL_MINUTES} 分钟后"
+            )
+            await telegram_bot.send_news(msg, source="heartbeat")
+            logger.info("心跳消息已发送")
+        except Exception as e:
+            logger.warning(f"心跳消息发送失败: {e}")
 
 
 async def _run_with_restart(name: str, coro_factory, stop_event: asyncio.Event):
@@ -136,9 +160,10 @@ async def main():
     ]
 
     startup_task = asyncio.create_task(startup_notification(), name="startup_notification")
+    heartbeat_task = asyncio.create_task(heartbeat_loop(stop_event), name="heartbeat")
 
     logger.info("=" * 60)
-    logger.info("  所有模块已启动，Bot 正在运行...")
+    logger.info(f"  所有模块已启动，心跳间隔 {HEARTBEAT_INTERVAL_MINUTES} 分钟，Bot 正在运行...")
     logger.info("=" * 60)
 
     try:
@@ -157,11 +182,11 @@ async def main():
         bwe_monitor._running = False
         price_monitor._running = False
 
-        for task in tasks + [startup_task]:
+        for task in tasks + [startup_task, heartbeat_task]:
             if not task.done():
                 task.cancel()
 
-        await asyncio.gather(*tasks, startup_task, return_exceptions=True)
+        await asyncio.gather(*tasks, startup_task, heartbeat_task, return_exceptions=True)
 
         try:
             await telegram_bot.shutdown()

@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+*.pyo
+.env
+chat_ids.txt
+*.log
+.venv/
+venv/
+send_test_message.py
+manual_push_latest.py
+test_bwe_ws_raw.py
+*_notes.md

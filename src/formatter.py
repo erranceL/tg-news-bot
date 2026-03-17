@@ -44,7 +44,7 @@ def _shorten(text: str, limit: int = 140) -> str:
 
 def _build_source_line(source_name: str, url: str = "") -> str:
     if url:
-        return f"信息来源：<a href=\"{html.escape(url)}\">{html.escape(source_name)}</a>"
+        return f'信息来源：<a href="{html.escape(url)}">{html.escape(source_name)}</a>'
     return f"信息来源：{html.escape(source_name)}"
 
 
@@ -68,7 +68,7 @@ def _detect_listing_direction(text: str, catalog_name: str = "") -> str:
     return "公告"
 
 
-def _extract_symbol_candidates(text: str) -> list[str]:
+def _extract_symbol_candidates(text: str) -> list:
     if not text:
         return []
     candidates = re.findall(r"\b[A-Z0-9]{2,10}\b", text.upper())
@@ -146,20 +146,48 @@ def format_okx_announcement(data: dict) -> str:
     return _compose_message(title, content, "OKX 官方公告", time_str, url)
 
 
+def _parse_bwe_pub_date(pub_date_str: str) -> str:
+    """从 RSS pubDate 字符串解析出 yyyy.mm.dd 格式"""
+    if not pub_date_str:
+        return format_timestamp()
+    formats = [
+        "%a, %d %b %Y %H:%M:%S %z",
+        "%a, %d %b %Y %H:%M:%S %Z",
+    ]
+    for fmt in formats:
+        try:
+            dt = datetime.strptime(pub_date_str.strip(), fmt)
+            return dt.strftime("%Y.%m.%d")
+        except ValueError:
+            continue
+    return format_timestamp()
+
+
 def format_bwe_news(data: dict) -> str:
-    """格式化方程式快讯"""
+    """格式化方程式快讯（兼容 WebSocket 和 RSS 数据格式）"""
     news_title = data.get("news_title", "无标题")
     news_content = data.get("content", "") or news_title
     url = _normalize_url(data.get("url", ""))
     timestamp = data.get("timestamp", 0)
+    pub_date = data.get("pubDate", "")
     coins = data.get("coins_included", []) or []
+    source_name = data.get("source_name", "BWEnews")
 
     title = "方程式快讯"
     content = _shorten(news_content, 180)
     if coins:
-        content = f"涉及币种：{', '.join(map(str, coins[:6]))}；{content}"
-    time_str = format_timestamp(ts_sec=timestamp) if timestamp else format_timestamp()
-    return _compose_message(title, content, "BWEnews", time_str, url)
+        coin_str = ", ".join(map(str, coins[:6]))
+        content = f"涉及币种：{coin_str}；{content}"
+
+    # 优先用 timestamp，其次 pubDate，最后当前时间
+    if timestamp:
+        time_str = format_timestamp(ts_sec=timestamp)
+    elif pub_date:
+        time_str = _parse_bwe_pub_date(pub_date)
+    else:
+        time_str = format_timestamp()
+
+    return _compose_message(title, content, source_name, time_str, url)
 
 
 def format_price_alert(symbol: str, current_price: float, base_price: float,

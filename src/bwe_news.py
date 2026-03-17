@@ -137,8 +137,7 @@ class BWENewsMonitor:
         try:
             async with websockets.connect(
                 BWE_WS_URL,
-                ping_interval=20,
-                ping_timeout=30,
+                ping_interval=None,
                 close_timeout=5,
                 additional_headers={
                     "User-Agent": "Mozilla/5.0 (compatible; NewsBot/1.0)"

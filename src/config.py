@@ -21,7 +21,7 @@ BINANCE_ANNOUNCEMENT_API = "https://www.binance.com/bapi/composite/v1/public/cms
 BINANCE_ANNOUNCEMENT_DETAIL_BASE = "https://www.binance.com/en/support/announcement/detail"
 BINANCE_LISTING_CATALOG_ID = 48
 BINANCE_DELISTING_CATALOG_ID = 161
-BINANCE_POLL_INTERVAL_SECONDS = int(os.environ.get("BINANCE_POLL_INTERVAL", "10"))
+BINANCE_POLL_INTERVAL_SECONDS = int(os.environ.get("BINANCE_POLL_INTERVAL", "30"))
 
 # ==================== 币安行情 WebSocket 配置 ====================
 BINANCE_STREAM_URL = "wss://stream.binance.com:9443"
@@ -35,7 +35,7 @@ PRICE_ALERT_THRESHOLD_PERCENT = int(os.environ.get("PRICE_ALERT_THRESHOLD_PERCEN
 OKX_API_BASE_URL = "https://www.okx.com"
 OKX_ANNOUNCEMENT_PATH = "/api/v5/support/announcements"
 OKX_ANNOUNCEMENT_TYPES_PATH = "/api/v5/support/announcement-types"
-OKX_POLL_INTERVAL_SECONDS = int(os.environ.get("OKX_POLL_INTERVAL", "10"))
+OKX_POLL_INTERVAL_SECONDS = int(os.environ.get("OKX_POLL_INTERVAL", "30"))
 
 # ==================== 方程式新闻 WebSocket 配置 ====================
 BWE_WS_URL = "wss://bwenews-api.bwe-ws.com/ws"

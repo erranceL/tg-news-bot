@@ -24,7 +24,8 @@ BINANCE_DELISTING_CATALOG_ID = 161
 BINANCE_POLL_INTERVAL_SECONDS = int(os.environ.get("BINANCE_POLL_INTERVAL", "30"))
 
 # ==================== 币安行情 WebSocket 配置 ====================
-BINANCE_STREAM_URL = "wss://stream.binance.com:9443"
+# 使用公开行情端点，避免部分云区域对 stream.binance.com 的 451 拒绝
+BINANCE_STREAM_URL = os.environ.get("BINANCE_STREAM_URL", "wss://data-stream.binance.vision")
 BINANCE_REST_URL = "https://api.binance.com"
 
 # 价格波动提醒配置

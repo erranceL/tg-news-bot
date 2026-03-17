@@ -70,10 +70,12 @@ class BybitAnnouncementMonitor:
                     logger.error(f"Bybit API 错误: {data.get('retMsg')}")
                     return []
                 items = data.get("result", {}).get("list", [])
-                relevant = [
-                    ann for ann in items
-                    if self._is_relevant(ann.get("title", ""), ann.get("type", {}).get("title", ""))
-                ]
+                relevant = []
+                for ann in items:
+                    t = ann.get("type")
+                    type_title = t.get("title", "") if isinstance(t, dict) else str(t or "")
+                    if self._is_relevant(ann.get("title", ""), type_title):
+                        relevant.append(ann)
                 relevant.sort(key=self._ann_time_ms)
                 return relevant
         except aiohttp.ClientError as e:

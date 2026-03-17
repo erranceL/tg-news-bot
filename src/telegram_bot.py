@@ -186,6 +186,8 @@ class TelegramNewsBot:
 
     async def stop_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """处理 /stop 命令，取消接收新闻"""
+        if not update.effective_chat:
+            return
         chat_id = update.effective_chat.id
         self.chat_ids.discard(chat_id)
         self._save_chat_ids()
@@ -194,6 +196,8 @@ class TelegramNewsBot:
 
     async def status_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """处理 /status 命令，显示运行状态"""
+        if not update.effective_chat:
+            return
         from src.dedup import deduplicator
 
         status_msg = (
@@ -232,7 +236,8 @@ class TelegramNewsBot:
                 params = {"catalogId": BINANCE_LISTING_CATALOG_ID, "pageNo": 1, "pageSize": 1}
                 async with session.get(BINANCE_ANNOUNCEMENT_API, params=params, timeout=aiohttp.ClientTimeout(total=15)) as resp:
                     bdata = await resp.json()
-                    barticle = bdata.get("data", {}).get("articles", [])[0]
+                    articles = bdata.get("data", {}).get("articles", [])
+                    barticle = articles[0] if articles else {"title": "暂无公告", "body": "", "publishDate": 0}
 
                 okx_url = f"{OKX_API_BASE_URL}{OKX_ANNOUNCEMENT_PATH}"
                 headers = {"Accept-Language": "en-US", "User-Agent": "Mozilla/5.0 (compatible; NewsBot/1.0)"}

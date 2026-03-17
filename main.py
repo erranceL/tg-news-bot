@@ -29,7 +29,6 @@ from src.bybit_announcements import bybit_monitor
 from src.bitget_announcements import bitget_monitor
 from src.coinbase_monitor import coinbase_monitor
 from src.polymarket_monitor import polymarket_monitor
-from src.resonance_detector import resonance_detector
 
 # 配置日志
 logging.basicConfig(

@@ -225,7 +225,6 @@ def format_coinbase_announcement(data: dict) -> str:
     if pub_date_str:
         for fmt in ("%a, %d %b %Y %H:%M:%S %z", "%a, %d %b %Y %H:%M:%S %Z"):
             try:
-                from datetime import datetime
                 dt = datetime.strptime(pub_date_str.strip(), fmt)
                 time_str = dt.strftime("%Y.%m.%d %H:%M UTC")
                 break

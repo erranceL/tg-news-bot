@@ -18,7 +18,7 @@ from src.resonance_detector import send_resonance_alerts
 
 logger = logging.getLogger("coinbase_monitor")
 
-COINBASE_RSS_URL = "https://www.coinbase.com/blog/rss"
+COINBASE_RSS_URL = "https://medium.com/feed/the-coinbase-blog"
 
 LISTING_KEYWORDS = {
     "listing", "listed", "asset", "launch", "trading",

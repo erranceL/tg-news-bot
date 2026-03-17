@@ -19,11 +19,11 @@ logger = logging.getLogger("bitget_announcements")
 
 BITGET_ANNOUNCEMENT_API = "https://api.bitget.com/api/v2/public/annoucements"
 
-LISTING_KEYWORDS = {
-    "listing", "listed", "launchpad", "launchpool", "new pair",
-    "delisting", "delist", "futures", "options", "perpetual",
-    "上币", "下架", "上线", "新币"
-}
+# Bitget V2 API annType 枚举值（只拉取上币和下架相关）
+BITGET_ANN_TYPES = [
+    "coin_listings",
+    "delisting",
+]
 
 RECENT_WINDOW_DAYS = 7
 RECENT_WINDOW_MS = RECENT_WINDOW_DAYS * 24 * 60 * 60 * 1000
@@ -37,9 +37,6 @@ class BitgetAnnouncementMonitor:
         self._session: aiohttp.ClientSession | None = None
         self._seen_ids: OrderedDict[str, int] = OrderedDict()
         self._first_run = True
-
-    def _is_relevant(self, title: str) -> bool:
-        return any(kw in title.lower() for kw in LISTING_KEYWORDS)
 
     def _ann_time_ms(self, ann: dict) -> int:
         for field in ("annTime", "cTime", "ctime", "publishTime"):
@@ -55,10 +52,11 @@ class BitgetAnnouncementMonitor:
         ts = self._ann_time_ms(ann)
         return ts > 0 and ts >= int(time.time() * 1000) - RECENT_WINDOW_MS
 
-    async def _fetch_announcements(self) -> list:
+    async def _fetch_by_type(self, ann_type: str) -> list:
+        """按公告类型拉取 Bitget 公告"""
         params = {
             "language": "en_US",
-            "limit": "20",
+            "annType": ann_type,
         }
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
@@ -72,7 +70,7 @@ class BitgetAnnouncementMonitor:
                 timeout=aiohttp.ClientTimeout(total=15),
             ) as resp:
                 if resp.status != 200:
-                    logger.error(f"Bitget API HTTP {resp.status}")
+                    logger.error(f"Bitget API HTTP {resp.status} (annType={ann_type})")
                     return []
                 data = await resp.json()
                 code = data.get("code", "")
@@ -100,7 +98,10 @@ class BitgetAnnouncementMonitor:
         try:
             while self._running:
                 try:
-                    all_articles = await self._fetch_announcements()
+                    all_articles = []
+                    for ann_type in BITGET_ANN_TYPES:
+                        items = await self._fetch_by_type(ann_type)
+                        all_articles.extend(items)
                     all_articles.sort(key=self._ann_time_ms)
 
                     if self._first_run:
@@ -121,9 +122,6 @@ class BitgetAnnouncementMonitor:
                                 continue
 
                             self._seen_ids[ann_id] = int(time.time())
-
-                            if not self._is_relevant(title):
-                                continue
 
                             if not self._is_recent(ann):
                                 logger.info(f"跳过过旧 Bitget 公告: {title[:80]}")
